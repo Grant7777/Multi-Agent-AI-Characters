@@ -50,4 +50,6 @@ This stops the agents from activating each other. Basically, use this to stop th
 
 All agents will automatically store their "chat history" into a backup txt file as the conversation continues. This is done so that when you restart the program, each agent will automatically load from their backup file and thus restore the entire conversation, letting you continue it from where you left off. If you ever want to fully reset the conversation then just delete the backup txt files in the project.
 
-If you want to have the agent dialogue displayed in OBS, you should add a browser source and set the URL to "127.0.0.1:5151". 
+If you want to have the agent dialogue displayed in OBS, you should add a browser source and set the URL to "127.0.0.1:5151".
+
+blah
