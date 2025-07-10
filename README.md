@@ -15,7 +15,7 @@ This is uploaded for educational purposes. Unfortunately I don't have time to of
    - `GOOGLE_API_KEY` (for Gemini)
    - `ELEVENLABS_API_KEY` (for ElevenLabs TTS)
 
-4) This app uses the GPT-4o model from OpenAI by default. As of Sep 2024, you need to pay $5 to OpenAI to access the GPT-4o API. See: https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4-gpt-4-turbo-gpt-4o-and-gpt-4o-mini
+4) This app uses the GPT-4o model from OpenAi. As of this writing (Sep 3rd 2024), you need to pay $5 to OpenAi in order to get access to the GPT-4o model API. So after setting up your account with OpenAi, you will need to pay for at least $5 in credits so that your account is given the permission to use the GPT-4o model when running my app. See here: https://help.openai.com/en/articles/7102672-how-can-i-access-gpt-4-gpt-4-turbo-gpt-4o-and-gpt-4o-mini
 
 5) ElevenLabs is used for AI voices. After creating voices on the ElevenLabs website, open `multi_agent_gpt.py` and ensure the correct voice names are passed to each agent.
 
@@ -23,7 +23,10 @@ This is uploaded for educational purposes. Unfortunately I don't have time to of
 
 7) The app runs a Flask web server and displays the agents' dialogue using HTML and JavaScript. By default, it runs on `127.0.0.1:5151`, but you can change this in `multi_agent_gpt.py`.
 
-8) Optionally, you can use OBS Websockets and the Move OBS plugin to animate images while agents talk. See the OBS section below for details.
+8) Optionally, you can use OBS Websockets and an OBS plugin to make images move while talking.  
+First open up OBS. Make sure you're running version 28.X or later. Click Tools, then WebSocket Server Settings. Make sure "Enable WebSocket server" is checked. Then set Server Port to '4455' and set the Server Password to 'TwitchChat9'. If you use a different Server Port or Server Password in your OBS, just make sure you update the websockets_auth.py file accordingly.  
+Next install the Move OBS plugin: https://obsproject.com/forum/resources/move.913/ Now you can use this plugin to add a filter to an audio source that will change an image's transform based on the audio waveform. For example, I have a filter on a specific audio track that will move each agent's bell pepper icon source image whenever that pepper is talking.  
+Note that OBS must be open when you're running this code, otherwise OBS WebSockets won't be able to connect. If you don't need the images to move while talking, you can just delete the OBS portions of the code.
 
 ## Using the App
 
