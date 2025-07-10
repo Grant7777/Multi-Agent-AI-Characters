@@ -62,4 +62,23 @@ $(document).ready(function() {
         if (cb)
             cb();
     });
+
+    // LLM selection logic
+    [1,2,3].forEach(function(agentId) {
+        $('#llm-apply-' + agentId).on('click', function() {
+            var provider = $('#llm-provider-' + agentId).val();
+            var model = $('#llm-model-' + agentId).val();
+            socket.emit('set_llm_for_agent', {
+                agent_id: agentId,
+                provider: provider,
+                model: model
+            });
+        });
+    });
+    socket.on('llm_update_success', function(msg) {
+        alert('Agent ' + msg.agent_id + ' LLM updated to ' + msg.provider + ' (' + msg.model + ')');
+    });
+    socket.on('llm_update_error', function(msg) {
+        alert('Error updating LLM for agent ' + msg.agent_id + ': ' + msg.error);
+    });
 });

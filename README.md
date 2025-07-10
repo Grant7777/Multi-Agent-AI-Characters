@@ -46,6 +46,27 @@ __Numpad2 will "activate" Agent #2, Numpad3 will "activate" Agent #3.__
 __F4 will "pause" all agents__   
 This stops the agents from activating each other. Basically, use this to stop the conversation from continuing any further, and then you can talk to the agents again.
 
+## Multi-LLM Support
+
+This app now supports three LLM providers:
+- **OpenAI** (GPT-4o, etc.)
+- **Anthropic Claude** (e.g., Claude 3 Opus)
+- **Google Gemini** (e.g., Gemini 1.5 Pro)
+
+### Setup for Additional Providers
+- For Claude, set the environment variable `ANTHROPIC_API_KEY`.
+- For Gemini, set the environment variable `GOOGLE_API_KEY`.
+- All three providers require their respective Python packages, which are now included in `requirements.txt`.
+
+### Dynamic LLM Selection
+- You can select the LLM provider and model for each agent dynamically in the web UI.
+- The dropdowns for each agent allow you to choose between OpenAI, Claude, and Gemini, and select the model (if multiple are available).
+
+### Provider Notes
+- **Image analysis** is only supported for OpenAI GPT-4o.
+- Claude and Gemini do not support image input or output in this app version.
+- Token counting is most accurate for OpenAI; for others, it is estimated.
+
 ## Miscellaneous notes:
 
 All agents will automatically store their "chat history" into a backup txt file as the conversation continues. This is done so that when you restart the program, each agent will automatically load from their backup file and thus restore the entire conversation, letting you continue it from where you left off. If you ever want to fully reset the conversation then just delete the backup txt files in the project.

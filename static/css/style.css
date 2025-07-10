@@ -41,3 +41,41 @@
     color: rgb(255, 255, 255);
     font-weight: bold;
 }
+
+.llm-select {
+    margin-bottom: 10px;
+    background: #232042;
+    padding: 10px 10px 5px 10px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.llm-select label {
+    font-size: 16px;
+    margin-right: 4px;
+}
+.llm-select select {
+    font-size: 16px;
+    margin: 0 4px 4px 0;
+    background: #18162e;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 2px 8px;
+}
+.llm-select button.llm-apply {
+    background: #3a8fff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 4px 12px;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 2px;
+    transition: background 0.2s;
+}
+.llm-select button.llm-apply:hover {
+    background: #2566b3;
+}

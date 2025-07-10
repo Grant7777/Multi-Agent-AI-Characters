@@ -64,7 +64,7 @@ from rich import print
 
 from audio_player import AudioManager
 from eleven_labs import ElevenLabsManager
-from openai_chat import OpenAiManager
+from openai_chat import LLMManager
 from whisper_openai import WhisperManager
 from obs_websockets import OBSWebsocketsManager
 from ai_prompts import *
@@ -94,10 +94,13 @@ conversation_lock = threading.Lock()
 
 agents_paused = False
 
+# Map agent_id to agent instance for dynamic LLM selection
+agent_id_map = {}
+
 # Class that represents a single ChatGPT Agent and its information
 class Agent():
     
-    def __init__(self, agent_name, agent_id, filter_name, all_agents, system_prompt, elevenlabs_voice):
+    def __init__(self, agent_name, agent_id, filter_name, all_agents, system_prompt, elevenlabs_voice, provider='openai', model=None):
         # Flag of whether this agent should begin speaking
         self.activated = False 
         # Used to identify each agent in the conversation history
@@ -115,9 +118,16 @@ class Agent():
         backup_file_name = f"backup_history_{agent_name}.txt"
         # Initialize the OpenAi manager with a system prompt and a file that you would like to save your conversation too
         # If the backup file isn't empty, then it will restore that backed up conversation for this agent
-        self.openai_manager = OpenAiManager(system_prompt, backup_file_name) 
+        self.llm_manager = LLMManager(system_prompt, backup_file_name, provider, model)
         # Optional - tells the OpenAi manager not to print as much
-        self.openai_manager.logging = False
+        self.llm_manager.logging = False
+        self.provider = provider
+        self.model = model
+
+    def set_llm(self, provider, model=None):
+        self.provider = provider
+        self.model = model
+        self.llm_manager.set_provider(provider, model)
 
     def run(self):
         while True:
@@ -132,19 +142,20 @@ class Agent():
             # This lock isn't necessary in theory, but for safety we will require this lock whenever updating any agent's convo history
             with conversation_lock:
                 # Generate a response to the conversation
-                openai_answer = self.openai_manager.chat_with_history("Okay what is your response? Try to be as chaotic and bizarre and adult-humor oriented as possible. Again, 3 sentences maximum.")
-                openai_answer = openai_answer.replace("*", "")
-                print(f'[magenta]Got the following response:\n{openai_answer}')
+                answer = self.llm_manager.chat_with_history("Okay what is your response? Try to be as chaotic and bizarre and adult-humor oriented as possible. Again, 3 sentences maximum.")
+                if answer is not None:
+                    answer = answer.replace("*", "")
+                print(f'[magenta]Got the following response:\n{answer}')
 
                 # Add your new response into everyone else's chat history, then have them save their chat history
                 # This agent's responses are marked as "assistant" role to itself, so everyone elses messages are "user" role.
                 for agent in self.all_agents:
                     if agent is not self:
-                        agent.openai_manager.chat_history.append({"role": "user", "content": f"[{self.name}] {openai_answer}"})
-                        agent.openai_manager.save_chat_to_backup()
+                        agent.llm_manager.chat_history.append({"role": "user", "content": f"[{self.name}] {answer}"})
+                        agent.llm_manager.save_chat_to_backup()
 
             # Create audio response
-            tts_file = elevenlabs_manager.text_to_audio(openai_answer, self.voice, False)
+            tts_file = elevenlabs_manager.text_to_audio(answer, self.voice, False)
 
             # Process the audio to get subtitles
             audio_and_timestamps = whisper_manager.audio_to_text(tts_file, "sentence")
@@ -219,8 +230,8 @@ class Human():
 
                     # Add Doug's response into all agents chat history
                     for agent in self.all_agents:
-                        agent.openai_manager.chat_history.append({"role": "user", "content": f"[{self.name}] {transcribed_audio}"})
-                        agent.openai_manager.save_chat_to_backup() # Tell the other agents to save their chat history to their backup file
+                        agent.llm_manager.chat_history.append({"role": "user", "content": f"[{self.name}] {transcribed_audio}"})
+                        agent.llm_manager.save_chat_to_backup() # Tell the other agents to save their chat history to their backup file
                 
                 print(f"[italic magenta] DougDoug has FINISHED speaking.")
 
@@ -289,6 +300,11 @@ if __name__ == '__main__':
     all_agents.append(agent2)
     all_agents.append(agent3)
 
+    # Map agent_id to agent instance for dynamic LLM selection
+    agent_id_map[1] = agent1
+    agent_id_map[2] = agent2
+    agent_id_map[3] = agent3
+
     # Human thread
     human = Human("DOUGDOUG", all_agents)
     human_thread = threading.Thread(target=start_bot, args=(human,))
@@ -302,3 +318,15 @@ if __name__ == '__main__':
     agent2_thread.join()
     agent3_thread.join()
     human_thread.join()
+
+@socketio.on('set_llm_for_agent')
+def set_llm_for_agent(data):
+    agent_id = data.get('agent_id')
+    provider = data.get('provider')
+    model = data.get('model')
+    agent = agent_id_map.get(agent_id)
+    if agent:
+        agent.set_llm(provider, model)
+        emit('llm_update_success', {'agent_id': agent_id, 'provider': provider, 'model': model})
+    else:
+        emit('llm_update_error', {'error': 'Agent not found', 'agent_id': agent_id})
